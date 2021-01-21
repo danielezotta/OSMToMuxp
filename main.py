@@ -1,9 +1,10 @@
 import PySimpleGUI as sg
 import xml.etree.ElementTree as ET
 
+
 def convert(path):
 
-    # try:
+    try:
         f = open(path, "r")
         f.close()
 
@@ -11,19 +12,32 @@ def convert(path):
 
         # get all ways, are paths
         for way in root.iter('way'):
-            print("cut_polygon." + way.attrib["id"])
             altitudeTags = way.findall('tag')
             if len(altitudeTags) == 1:
+                print("cut_polygon." + way.attrib["id"] + ":")
                 print("\televation: " + altitudeTags[0].attrib["v"])
                 print("\tcoordinates:")
                 for nd in way.iter('nd'):
                     node = root.find('./node[@id=\'' + nd.attrib["ref"] + '\']')
-                    print("\t\t", node.attrib["lat"], ",", node.attrib["lon"])
-            # else:
-            #     print(way.attrib["altitude_high"], way.attrib["altitude_low"])
+                    print("\t\t - ", node.attrib["lat"], "\t", node.attrib["lon"])
+            else:
+                print("cut_ramp." + way.attrib["id"] + ":")
+                print("\tcoordinates:")
+                for nd in way.iter('nd'):
+                    node = root.find('./node[@id=\'' + nd.attrib["ref"] + '\']')
+                    print("\t\t - ", node.attrib["lat"], "\t", node.attrib["lon"])
+                print("\t3d_coordinates:")
 
-    # except:
-    #     print("File not found")
+                # find first node for height
+                node = root.find('./node[@id=\'' + way.findall('nd')[0].attrib["ref"] + '\']')
+                print("\t\t - ", node.attrib["lat"], "\t", node.attrib["lon"], "\t", way.find('tag[@k="altitude_high"]').attrib["v"])
+
+                # find second node for height
+                node = root.find('./node[@id=\'' + way.findall('nd')[1].attrib["ref"] + '\']')
+                print("\t\t - ", node.attrib["lat"], "\t", node.attrib["lon"], "\t", way.find('tag[@k="altitude_low"]').attrib["v"])
+
+    except:
+        print("File not found")
 
 
 def main():
@@ -38,8 +52,7 @@ def main():
     # Create an event loop
     while True:
         event, values = window.read()
-        # End program if user closes window or
-        # presses the OK button
+
         if event == "Convert":
             print(values['osm-file'])
             if values['osm-file']:
@@ -48,6 +61,7 @@ def main():
             break
 
     window.close()
+
 
 if __name__ == '__main__':
     main()
