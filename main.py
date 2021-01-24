@@ -3,11 +3,9 @@ import xml.etree.ElementTree as ET
 
 
 def getTileDef(lat, lon):
-    print(lat)
     lat = int(lat)
     lon = int(lon)
     formattedTileString = '%+d%+04d' % (lat, lon)
-    print(formattedTileString)
     return formattedTileString
 
 
@@ -25,7 +23,6 @@ def getArea(path, lat, lon):
     minlon = max(min(arrlon) - 0.001, float(lon))
     maxlon = min(max(arrlon) + 0.001, float(lon) + 1)
     formattedTileString = '%f %f %f %f' % (minlat, maxlat, minlon, maxlon)
-    print(formattedTileString)
     return formattedTileString
 
 
@@ -74,11 +71,19 @@ def convert(path, lat, lon):
                 lonTop = (float(node_1.attrib["lon"]) + float(node_4.attrib["lon"])) / 2
                 latBot = (float(node_2.attrib["lat"]) + float(node_3.attrib["lat"])) / 2
                 lonBot = (float(node_2.attrib["lon"]) + float(node_3.attrib["lon"])) / 2
+                latMid = (latTop - latBot) / 2
+                lonMid = (lonTop - lonBot) / 2
                 latDist = (latTop - latBot) / 8
                 lonDist = (lonTop - lonBot) / 8
+                heightHigh = int(way.find('tag[@k="altitude_high"]').attrib["v"])
+                heightLow = int(way.find('tag[@k="altitude_low"]').attrib["v"])
 
-                output += ("\t\t - " + str(latTop - latDist) + "\t" + str(lonTop - lonDist) + "\t" + way.find('tag[@k="altitude_high"]').attrib["v"] + "\n")
-                output += ("\t\t - " + str(latBot + latDist) + "\t" + str(lonBot + lonDist) + "\t" + way.find('tag[@k="altitude_low"]').attrib["v"] + "\n")
+                output += ("\t\t - " + str(latTop - latDist) + "\t" + str(lonTop - lonDist) + "\t" + str(heightHigh)
+                            + "\n")
+                output += ("\t\t - " + str(latBot + latDist) + "\t" + str(lonBot + lonDist) + "\t" + str(heightLow)
+                            + "\n")
+                output += ("\t\t - " + str(latMid) + "\t" + str(lonMid) + "\t" + str((heightHigh - heightLow) / 2)
+                            + way.find('tag[@k="altitude_low"]').attrib["v"] + "\n")
 
                 output += "\n"
 
@@ -107,7 +112,7 @@ def main():
         event, values = window.read()
 
         if event == "Convert":
-            print(values['osm-file'])
+            print("Converting: ", values['osm-file'])
             if values['osm-file']:
                 try:
                     f = open(values['osm-file'], "r")
@@ -148,7 +153,7 @@ def main():
                     window['state'].update('Finished')
 
                 except:
-                    print("File not found")
+                    print("Exception occured")
 
         elif event == sg.WIN_CLOSED:
             break
